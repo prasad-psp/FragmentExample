@@ -1,6 +1,7 @@
 package com.psp.fragmentexample;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -14,10 +15,10 @@ import com.psp.fragmentexample.fragments.FragmentTwo;
 public class MainActivity extends AppCompatActivity {
 
     Button btnOne,btnTwo;
-    FrameLayout frameLayout;
 
     FragmentOne fragmentOne = new FragmentOne();
     FragmentTwo fragmentTwo = new FragmentTwo();
+    Fragment currentFragment = fragmentOne;
 
     @Override
     protected void onDestroy() {
@@ -61,6 +62,37 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
+                if(!(currentFragment instanceof FragmentOne)) {
+
+                    if(getSupportFragmentManager().findFragmentByTag("one") == null) {
+                        //add fragment
+                        addFragment(currentFragment,fragmentOne,"one");
+                        currentFragment = fragmentOne;
+                    }
+                    else {
+                        // show fragment
+                        showFragment(currentFragment,fragmentOne);
+                        currentFragment = fragmentOne;
+                    }
+                }
+            }
+        });
+
+        btnTwo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(!(currentFragment instanceof FragmentTwo)) {
+                    if(getSupportFragmentManager().findFragmentByTag("two") == null) {
+                        // add frgament
+                        addFragment(currentFragment,fragmentTwo,"two");
+                        currentFragment = fragmentTwo;
+                    }
+                    else {
+                        // show fragment
+                        showFragment(currentFragment,fragmentTwo);
+                        currentFragment = fragmentTwo;
+                    }
+                }
             }
         });
     }
@@ -68,6 +100,28 @@ public class MainActivity extends AppCompatActivity {
     private void init() {
         btnOne = findViewById(R.id.btnOne);
         btnTwo = findViewById(R.id.btnTwo);
+
+        addFragment(currentFragment,fragmentOne,"one");
+    }
+
+    private void addFragment(Fragment currFragment,Fragment newFragment,String tag) {
+        getSupportFragmentManager().beginTransaction()
+                .hide(currFragment)
+                .add(R.id.framelayout,newFragment,tag)
+                .addToBackStack(tag)
+                .show(newFragment)
+                .commit();
+
+        logMsg("addFragment currentFragment is "+currFragment+" and newFragment is "+newFragment);
+    }
+
+    private void showFragment(Fragment currFragment,Fragment showFragment) {
+        getSupportFragmentManager().beginTransaction()
+                .hide(currFragment)
+                .show(showFragment)
+                .commit();
+
+        logMsg("showFragment currentFragment is "+currFragment+" and showFragment is "+showFragment);
     }
 
     private void logMsg(String msg) {
