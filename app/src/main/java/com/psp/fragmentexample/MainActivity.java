@@ -4,6 +4,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -14,7 +16,7 @@ import com.psp.fragmentexample.fragments.FragmentTwo;
 
 public class MainActivity extends AppCompatActivity {
 
-    Button btnOne,btnTwo;
+    Button btnOne,btnTwo,btnShowFragment;
 
     FragmentOne fragmentOne = new FragmentOne();
     FragmentTwo fragmentTwo = new FragmentTwo();
@@ -95,11 +97,25 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        btnShowFragment.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        showFragment(currentFragment,fragmentOne);
+                        currentFragment = fragmentOne;
+                    }
+                },5000);
+            }
+        });
     }
 
     private void init() {
         btnOne = findViewById(R.id.btnOne);
         btnTwo = findViewById(R.id.btnTwo);
+        btnShowFragment = findViewById(R.id.btnShowFrag);
 
         addFragment(currentFragment,fragmentOne,"one");
     }
