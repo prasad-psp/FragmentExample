@@ -1,7 +1,10 @@
 package com.psp.fragmentexample;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.Lifecycle;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -22,10 +25,34 @@ public class MainActivity extends AppCompatActivity {
     FragmentTwo fragmentTwo = new FragmentTwo();
     Fragment currentFragment = fragmentOne;
 
+    private boolean onSaveInstanceRun = false;
+    private boolean pendingFragmentShow = false;
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
         logMsg("onDestroy");
+        System.exit(0);
+    }
+
+    @Override
+    public void onBackPressed() {
+
+        if(fragmentOne != null) {
+            if(fragmentOne.isVisible()) {
+                logMsg("back pressed when fragment one is visible");
+                onDestroy();
+            }
+            else {
+                logMsg("OnBack pressed fragment one is not visible");
+                showFragment(currentFragment,fragmentOne);
+                currentFragment = fragmentOne;
+                clearBackStack();
+            }
+        }
+        else {
+            logMsg("back pressed when frament one is null");
+        }
     }
 
     @Override
@@ -44,12 +71,27 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         logMsg("onResume");
+
+        if(pendingFragmentShow) {
+            logMsg("pending fragment show is true");
+            showFragment(currentFragment,fragmentOne);
+            currentFragment = fragmentOne;
+            pendingFragmentShow = false;
+        }
     }
 
     @Override
     protected void onStart() {
         super.onStart();
         logMsg("onStart");
+        onSaveInstanceRun = false;
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        logMsg("onSaveInstanceState");
+        onSaveInstanceRun = true;
     }
 
     @Override
@@ -68,8 +110,8 @@ public class MainActivity extends AppCompatActivity {
 
                     if(getSupportFragmentManager().findFragmentByTag("one") == null) {
                         //add fragment
-                        addFragment(currentFragment,fragmentOne,"one");
                         currentFragment = fragmentOne;
+                        addFragment(currentFragment,fragmentOne,"one");
                     }
                     else {
                         // show fragment
@@ -104,8 +146,16 @@ public class MainActivity extends AppCompatActivity {
                 new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        showFragment(currentFragment,fragmentOne);
-                        currentFragment = fragmentOne;
+
+                        if(!onSaveInstanceRun) {
+                            logMsg("btnShowFragment onSaveInstanceRun false");
+                            showFragment(currentFragment, fragmentOne);
+                            currentFragment = fragmentOne;
+                        }
+                        else {
+                            logMsg("btnShowFragment onSaveInstanceRun true");
+                            pendingFragmentShow = true;
+                        }
                     }
                 },5000);
             }
@@ -126,18 +176,40 @@ public class MainActivity extends AppCompatActivity {
                 .add(R.id.framelayout,newFragment,tag)
                 .addToBackStack(tag)
                 .show(newFragment)
+                .setMaxLifecycle(currFragment, Lifecycle.State.STARTED)
+                .setMaxLifecycle(newFragment, Lifecycle.State.RESUMED)
                 .commit();
 
         logMsg("addFragment currentFragment is "+currFragment+" and newFragment is "+newFragment);
     }
 
     private void showFragment(Fragment currFragment,Fragment showFragment) {
-        getSupportFragmentManager().beginTransaction()
-                .hide(currFragment)
-                .show(showFragment)
-                .commit();
 
-        logMsg("showFragment currentFragment is "+currFragment+" and showFragment is "+showFragment);
+        if(currFragment.isAdded()) {
+            getSupportFragmentManager().beginTransaction()
+                    .hide(currFragment)
+                    .setMaxLifecycle(currentFragment, Lifecycle.State.STARTED)
+                    .show(showFragment)
+                    .setMaxLifecycle(showFragment, Lifecycle.State.RESUMED)
+                    .commit();
+
+            logMsg("showFragment currentFragment is " + currFragment + " and showFragment is " + showFragment);
+        }
+        else {
+            logMsg("current fragment is not added");
+        }
+    }
+
+    private void clearBackStack(){
+        if(getSupportFragmentManager().getBackStackEntryCount()>1) {
+
+            FragmentManager.BackStackEntry entry = getSupportFragmentManager().getBackStackEntryAt(
+                    1);
+            getSupportFragmentManager().popBackStack(entry.getId(),
+                    FragmentManager.POP_BACK_STACK_INCLUSIVE);
+            getSupportFragmentManager().executePendingTransactions();
+            logMsg("clear backstack");
+        }
     }
 
     private void logMsg(String msg) {
