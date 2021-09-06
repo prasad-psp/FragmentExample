@@ -36,8 +36,10 @@ public class FragmentOne extends Fragment {
 
     @Override
     public void onStop() {
+        if(isVisible()) {
+            logMsg("onStop");
+        }
         super.onStop();
-        logMsg("onStop");
     }
 
     @Override

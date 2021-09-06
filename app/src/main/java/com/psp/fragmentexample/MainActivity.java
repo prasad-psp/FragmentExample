@@ -12,7 +12,6 @@ import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.FrameLayout;
 
 import com.psp.fragmentexample.fragments.FragmentOne;
 import com.psp.fragmentexample.fragments.FragmentTwo;
@@ -76,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
             logMsg("pending fragment show is true");
             showFragment(currentFragment,fragmentOne);
             currentFragment = fragmentOne;
+            clearBackStack();
             pendingFragmentShow = false;
         }
     }
